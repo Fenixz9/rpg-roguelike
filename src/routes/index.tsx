@@ -67,6 +67,8 @@ function Run({ place, onExit, onRetry }: { place: Place; onExit: () => void; onR
     const canvas = canvasRef.current!;
     const game = new Game(canvas, place, () => force((n) => n + 1));
     gameRef.current = game;
+    force((n) => n + 1);
+    const tick = window.setInterval(() => force((n) => n + 1), 500);
     let raf = 0, last = performance.now();
     const loop = (t: number) => {
       const dt = Math.min(0.05, (t - last) / 1000);
@@ -97,6 +99,7 @@ function Run({ place, onExit, onRetry }: { place: Place; onExit: () => void; onR
     window.addEventListener("keyup", ku);
     return () => {
       cancelAnimationFrame(raf);
+      window.clearInterval(tick);
       window.removeEventListener("mousemove", mm);
       window.removeEventListener("touchmove", tm);
       window.removeEventListener("touchstart", tm);
