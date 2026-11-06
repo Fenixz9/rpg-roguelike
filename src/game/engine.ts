@@ -3,7 +3,7 @@ export const W = 320;
 export const H = 180;
 
 type Sprite = HTMLCanvasElement;
-function makeSprite(rows: string[], pal: Record<string, string>): Sprite {
+export function makeSprite(rows: string[], pal: Record<string, string>): Sprite {
   const c = document.createElement("canvas");
   c.width = rows[0]!.length;
   c.height = rows.length;
@@ -19,7 +19,7 @@ function makeSprite(rows: string[], pal: Record<string, string>): Sprite {
   return c;
 }
 
-const HERO = [
+export const HERO = [
   "..hhhh..",
   ".hhhhhh.",
   ".hsesse.",
@@ -69,7 +69,7 @@ interface Loot { x: number; y: number; type: "gem" | "heart"; }
 interface Particle { x: number; y: number; vx: number; vy: number; life: number; color: string; }
 
 export interface Card { id: string; title: string; desc: string; apply: (s: Stats) => void; }
-export interface Stats { damage: number; fireDelay: number; speed: number; shots: number; pierce: number; maxHp: number; hp: number; bulletSpeed: number; magnet: number; }
+export interface Stats { damage: number; fireDelay: number; speed: number; shots: number; pierce: number; maxHp: number; hp: number; bulletSpeed: number; magnet: number; life: number; regen: number; }
 
 export const CARD_POOL: Card[] = [
   { id: "dmg", title: "Lâmina Afiada", desc: "+30% dano", apply: (s) => (s.damage *= 1.3) },
@@ -82,6 +82,25 @@ export const CARD_POOL: Card[] = [
   { id: "vel", title: "Flecha Veloz", desc: "+25% vel. do tiro", apply: (s) => (s.bulletSpeed *= 1.25) },
   { id: "mag", title: "Ímã", desc: "Coleta loot de longe", apply: (s) => (s.magnet += 20) },
 ];
+
+export interface HeroClass { id: string; name: string; weapon: string; desc: string; pal: Record<string, string>; bullet: string; size: number; base: Partial<Stats>; }
+export const CLASSES: HeroClass[] = [
+  { id: "knight", name: "Cavaleiro", weapon: "Espada", desc: "Muita vida. Golpes curtos e fortes que atravessam inimigos.", pal: { h: "#9aa4b0", s: "#f2c79a", e: "#111", b: "#6b7785", l: "#3a2a1a" }, bullet: "#dfe6ee", size: 4, base: { maxHp: 10, hp: 10, damage: 1.6, fireDelay: 0.45, speed: 55, bulletSpeed: 140, life: 0.35, pierce: 2 } },
+  { id: "mage", name: "Mago", weapon: "Cajado", desc: "Pouca vida. Bolas de fogo lentas e devastadoras.", pal: { h: "#6a3fc4", s: "#f2c79a", e: "#111", b: "#4b2a8f", l: "#2a1a3a" }, bullet: "#ff8a3d", size: 4, base: { maxHp: 5, hp: 5, damage: 2.4, fireDelay: 0.7, bulletSpeed: 120, pierce: 1 } },
+  { id: "archer", name: "Arqueiro", weapon: "Arco", desc: "Flechas rápidas de longo alcance.", pal: { h: "#2e7d32", s: "#f2c79a", e: "#111", b: "#558b2f", l: "#3a2a1a" }, bullet: "#ffe066", size: 2, base: { maxHp: 6, hp: 6, fireDelay: 0.3, bulletSpeed: 230, life: 1.6 } },
+  { id: "rogue", name: "Ladino", weapon: "Adagas", desc: "Muito veloz. Arremessa duas adagas de cada vez.", pal: { h: "#222", s: "#f2c79a", e: "#e33", b: "#3b3b3b", l: "#1a1a1a" }, bullet: "#cfd8dc", size: 2, base: { maxHp: 5, hp: 5, damage: 0.7, fireDelay: 0.28, speed: 80, shots: 2 } },
+  { id: "cleric", name: "Clérigo", weapon: "Maça sagrada", desc: "Regenera vida com o tempo e atrai loot de longe.", pal: { h: "#f5f5f5", s: "#f2c79a", e: "#111", b: "#d4af37", l: "#5a4a32" }, bullet: "#fff59d", size: 3, base: { maxHp: 8, hp: 8, regen: 0.08, magnet: 40 } },
+];
+export interface Upgrades { dmg: number; hp: number; spd: number; rate: number; mag: number; }
+export const UPGRADES: { id: keyof Upgrades; name: string; desc: string }[] = [
+  { id: "dmg", name: "Afiar arma", desc: "+10% dano" },
+  { id: "hp", name: "Armadura", desc: "+1 vida máx." },
+  { id: "spd", name: "Botas", desc: "+5% velocidade" },
+  { id: "rate", name: "Empunhadura", desc: "+6% cadência" },
+  { id: "mag", name: "Bolsa de couro", desc: "+8 alcance de coleta" },
+];
+export const upgradeCost = (lvl: number) => 10 + lvl * 12;
+export const MAX_UPGRADE = 8;
 
 export type Phase = "play" | "cards" | "dead" | "win";
 export interface Place { name: string; waves: number; waveTime: number; diff: number; floor: string; floor2: string; wall: string; }
@@ -98,7 +117,9 @@ export class Game {
   mx = W / 2; my = H / 2; // mouse in screen px
   pointerActive = false;
   keys: Record<string, boolean> = {};
-  stats: Stats = { damage: 1, fireDelay: 0.4, speed: 60, shots: 1, pierce: 0, maxHp: 6, hp: 6, bulletSpeed: 160, magnet: 16 };
+  stats: Stats;
+  cls: HeroClass;
+  regenAcc = 0;
   enemies: Enemy[] = []; bullets: Bullet[] = []; loot: Loot[] = []; parts: Particle[] = [];
   fireT = 0; spawnT = 0; wave = 1; waveT = 0; total = 0; kills = 0; gems = 0; inv = 0;
   phase: Phase = "play";
@@ -106,13 +127,18 @@ export class Game {
   arena = 260;
   onChange: () => void;
 
-  constructor(canvas: HTMLCanvasElement, place: Place, onChange: () => void) {
+  constructor(canvas: HTMLCanvasElement, place: Place, onChange: () => void, cls: HeroClass = CLASSES[0]!, up: Upgrades = { dmg: 0, hp: 0, spd: 0, rate: 0, mag: 0 }) {
+    this.cls = cls;
+    const s: Stats = { damage: 1, fireDelay: 0.4, speed: 60, shots: 1, pierce: 0, maxHp: 6, hp: 6, bulletSpeed: 160, magnet: 16, life: 1.2, regen: 0, ...cls.base };
+    s.damage *= 1 + up.dmg * 0.1; s.maxHp += up.hp; s.hp = s.maxHp; s.speed *= 1 + up.spd * 0.05;
+    s.fireDelay *= Math.pow(0.94, up.rate); s.magnet += up.mag * 8;
+    this.stats = s;
     this.ctx = canvas.getContext("2d")!;
     this.ctx.imageSmoothingEnabled = false;
     this.place = place;
     this.onChange = onChange;
     this.sprites = {
-      hero: makeSprite(HERO, { h: "#c0392b", s: "#f2c79a", e: "#111", b: "#2f6fd6", l: "#3a2a1a" }),
+      hero: makeSprite(HERO, cls.pal),
       zombie: makeSprite(ZOMBIE, { g: "#6fa34a", r: "#e33", c: "#5b4a7a" }),
       skeleton: makeSprite(SKELETON, { w: "#e8e4d8", k: "#222" }),
       mummy: makeSprite(MUMMY, { m: "#d9c79a", n: "#a8946a", y: "#ffd23f" }),
@@ -194,9 +220,11 @@ export class Game {
       const base = Math.atan2(ay, ax);
       for (let i = 0; i < s.shots; i++) {
         const a = base + (i - (s.shots - 1) / 2) * 0.15;
-        this.bullets.push({ x: this.px, y: this.py, vx: Math.cos(a) * s.bulletSpeed, vy: Math.sin(a) * s.bulletSpeed, life: 1.2, pierce: s.pierce, hits: [] });
+        this.bullets.push({ x: this.px, y: this.py, vx: Math.cos(a) * s.bulletSpeed, vy: Math.sin(a) * s.bulletSpeed, life: s.life, pierce: s.pierce, hits: [] });
       }
     }
+
+    if (s.regen > 0 && s.hp < s.maxHp) { this.regenAcc += s.regen * dt; if (this.regenAcc >= 1) { this.regenAcc = 0; s.hp++; this.onChange(); } }
 
     // Spawning
     this.spawnT -= dt;
@@ -288,8 +316,9 @@ export class Game {
       g.drawImage(this.sprites["hero"]!, -4, -4);
       g.restore();
     }
-    g.fillStyle = "#ffe066";
-    for (const b of this.bullets) g.fillRect(Math.round(b.x - cx - 1), Math.round(b.y - cy - 1), 2, 2);
+    g.fillStyle = this.cls.bullet;
+    const bs = this.cls.size, bh = bs / 2;
+    for (const b of this.bullets) g.fillRect(Math.round(b.x - cx - bh), Math.round(b.y - cy - bh), bs, bs);
     for (const p of this.parts) { g.fillStyle = p.color; g.fillRect(Math.round(p.x - cx), Math.round(p.y - cy), 1, 1); }
     // crosshair
     if (this.pointerActive) {
