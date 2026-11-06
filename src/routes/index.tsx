@@ -29,7 +29,7 @@ function Menu({ onPick }: { onPick: (p: Place) => void }) {
     const k = (e: KeyboardEvent) => {
       if (e.key === "ArrowUp" || e.key === "ArrowLeft") setSel(0);
       if (e.key === "ArrowDown" || e.key === "ArrowRight") setSel(1);
-      if (e.key === "Enter") onPick(PLACES[sel]);
+      if (e.key === "Enter") onPick(PLACES[sel]!);
     };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);

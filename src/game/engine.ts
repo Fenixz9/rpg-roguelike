@@ -5,12 +5,12 @@ export const H = 180;
 type Sprite = HTMLCanvasElement;
 function makeSprite(rows: string[], pal: Record<string, string>): Sprite {
   const c = document.createElement("canvas");
-  c.width = rows[0].length;
+  c.width = rows[0]!.length;
   c.height = rows.length;
   const g = c.getContext("2d")!;
   for (let y = 0; y < rows.length; y++)
-    for (let x = 0; x < rows[y].length; x++) {
-      const ch = rows[y][x];
+    for (let x = 0; x < rows[y]!.length; x++) {
+      const ch = rows[y]![x]!;
       if (ch !== "." && pal[ch]) {
         g.fillStyle = pal[ch];
         g.fillRect(x, y, 1, 1);
@@ -143,7 +143,7 @@ export class Game {
   rollCards() {
     const pool = CARD_POOL.slice();
     this.offer = [];
-    while (this.offer.length < 3 && pool.length) this.offer.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    while (this.offer.length < 3 && pool.length) this.offer.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]!);
   }
 
   pick(i: number) {
@@ -167,7 +167,7 @@ export class Game {
 
     // Movement: keyboard/remote arrows override, otherwise follow the mouse
     let dx = 0, dy = 0;
-    const k = this.keys;
+    const k = this.keys as Record<string, boolean | undefined> & { ArrowLeft?: boolean; ArrowRight?: boolean; ArrowUp?: boolean; ArrowDown?: boolean; a?: boolean; d?: boolean; w?: boolean; s?: boolean };
     if (k.ArrowLeft || k.a) dx -= 1;
     if (k.ArrowRight || k.d) dx += 1;
     if (k.ArrowUp || k.w) dy -= 1;
@@ -216,7 +216,7 @@ export class Game {
     // separation
     for (let i = 0; i < this.enemies.length; i++)
       for (let j = i + 1; j < this.enemies.length; j++) {
-        const a = this.enemies[i], b = this.enemies[j];
+        const a = this.enemies[i]!, b = this.enemies[j]!;
         const ddx = a.x - b.x, ddy = a.y - b.y, d = Math.hypot(ddx, ddy);
         if (d > 0 && d < 7) { const p = (7 - d) / 2; a.x += (ddx / d) * p; a.y += (ddy / d) * p; b.x -= (ddx / d) * p; b.y -= (ddy / d) * p; }
       }
@@ -274,10 +274,10 @@ export class Game {
         g.fillStyle = out ? this.place.wall : ((tx / T + ty / T) & 1 ? this.place.floor : this.place.floor2);
         g.fillRect(tx - cx, ty - cy, T, T);
       }
-    for (const l of this.loot) g.drawImage(this.sprites[l.type], Math.round(l.x - cx - 2), Math.round(l.y - cy - 2));
+    for (const l of this.loot) g.drawImage(this.sprites[l.type]!, Math.round(l.x - cx - 2), Math.round(l.y - cy - 2));
     for (const e of this.enemies) {
       g.globalAlpha = e.hit > 0 ? 0.5 : 1;
-      g.drawImage(this.sprites[e.kind], Math.round(e.x - cx - 4), Math.round(e.y - cy - 4));
+      g.drawImage(this.sprites[e.kind]!, Math.round(e.x - cx - 4), Math.round(e.y - cy - 4));
       g.globalAlpha = 1;
     }
     // hero
@@ -285,7 +285,7 @@ export class Game {
       g.save();
       g.translate(Math.round(this.px - cx), Math.round(this.py - cy));
       g.scale(this.face, 1);
-      g.drawImage(this.sprites.hero, -4, -4);
+      g.drawImage(this.sprites["hero"]!, -4, -4);
       g.restore();
     }
     g.fillStyle = "#ffe066";
