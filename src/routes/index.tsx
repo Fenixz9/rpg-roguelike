@@ -86,7 +86,7 @@ function Hub({ save, cls, onSave, onEnter }: { save: Save; cls: HeroClass; onSav
   return (
     <div className="pixel relative flex h-screen w-screen items-center justify-center overflow-hidden bg-background" style={{ cursor: panel ? "default" : "none" }}>
       <canvas ref={canvasRef} width={W} height={H} className="game-canvas" />
-      <div className="absolute left-0 right-0 top-0 flex justify-between p-4 text-lg text-foreground md:text-2xl">
+      <div className="absolute left-0 right-0 top-0 flex justify-between gap-4 p-4 text-base text-foreground md:text-xl">
         <div>Vila Segura</div>
         <div>{cls.name} · <span className="text-primary">◆ {save.gems}</span></div>
       </div>
@@ -221,7 +221,7 @@ function Run({ place, cls, up, onEnd }: { place: Place; cls: HeroClass; up: Upgr
     <div className="pixel relative flex h-screen w-screen items-center justify-center overflow-hidden bg-background" style={{ cursor: "none" }}>
       <canvas ref={canvasRef} width={W} height={H} className="game-canvas" />
       {g && s && (
-        <div className="absolute left-0 right-0 top-0 flex justify-between p-4 text-lg text-foreground md:text-2xl">
+        <div className="absolute left-0 right-0 top-0 flex justify-between gap-4 p-4 text-base text-foreground md:text-xl">
           <div>
             <span className="text-destructive">{"♥".repeat(Math.max(0, s.hp))}</span>
             <span className="text-muted-foreground">{"♥".repeat(Math.max(0, s.maxHp - s.hp))}</span>
