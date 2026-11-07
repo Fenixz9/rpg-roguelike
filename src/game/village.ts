@@ -1,16 +1,20 @@
 // Safe village hub — walkable with the mouse (click a spot or point to walk).
 import { W, H, HERO, makeSprite, type HeroClass } from "./engine";
 
+const hyp = (x: number, y: number) => Math.sqrt(x * x + y * y);
+
 export type SpotKind = "npc" | "smith" | "barracks" | "gate";
-export interface Spot { id: string; kind: SpotKind; name: string; x: number; y: number; pal: Record<string, string>; lines?: string[]; }
+export interface Spot { id: string; kind: SpotKind; name: string; x: number; y: number; pal: Record<string, string>; lines?: string[]; quest?: Quest; }
+export interface Quest { id: string; text: string; reward: number; kind: "kills" | "clear"; goal: number | string; }
 
 export const SPOTS: Spot[] = [
   { id: "smith", kind: "smith", name: "Ferreiro Bruno", x: 60, y: 60, pal: { h: "#3a2a1a", s: "#d9a77a", e: "#111", b: "#7a4a2a", l: "#222" } },
   { id: "barracks", kind: "barracks", name: "Quartel", x: 160, y: 46, pal: { h: "#9aa4b0", s: "#f2c79a", e: "#111", b: "#b03030", l: "#222" } },
+  { id: "padre", kind: "npc", name: "Padre Elias", x: 120, y: 60, pal: { h: "#333", s: "#e8b88a", e: "#111", b: "#222", l: "#111" }, lines: ["A Cripta das Múmias é o coração do mal.", "Só os mais fortes voltam de lá."], quest: { id: "q_padre", text: "Purifique a Cripta das Múmias", reward: 300, kind: "clear", goal: "cripta" } },
   { id: "gate", kind: "gate", name: "Portão", x: 290, y: 95, pal: {} },
-  { id: "ana", kind: "npc", name: "Ana, a curandeira", x: 90, y: 135, pal: { h: "#e0a030", s: "#f2c79a", e: "#111", b: "#3a8a5a", l: "#3a2a1a" }, lines: ["Somos dos últimos humanos vivos.", "Os mortos saem das cavernas à noite...", "Traga gemas ao ferreiro e fique mais forte."] },
-  { id: "velho", kind: "npc", name: "Velho Tomé", x: 200, y: 140, pal: { h: "#ddd", s: "#e8b88a", e: "#111", b: "#5a5a7a", l: "#3a2a1a" }, lines: ["Na Vila Abandonada moravam minha filha e meu neto.", "As múmias são lentas, mas batem forte.", "Os esqueletos correm. Não deixe que te cerquem!"] },
-  { id: "lia", kind: "npc", name: "Lia, a menina", x: 240, y: 60, pal: { h: "#a0522d", s: "#f2c79a", e: "#111", b: "#d06090", l: "#3a2a1a" }, lines: ["Você vai salvar a gente, né?", "Dizem que a caverna tem mais gemas... e mais monstros."] },
+  { id: "ana", kind: "npc", name: "Ana, a curandeira", x: 90, y: 135, pal: { h: "#e0a030", s: "#f2c79a", e: "#111", b: "#3a8a5a", l: "#3a2a1a" }, lines: ["Somos dos últimos humanos vivos.", "Os mortos saem das cavernas à noite...", "Traga gemas ao ferreiro e fique mais forte."], quest: { id: "q_ana", text: "Derrote 150 mortos-vivos", reward: 60, kind: "kills", goal: 150 } },
+  { id: "velho", kind: "npc", name: "Velho Tomé", x: 200, y: 140, pal: { h: "#ddd", s: "#e8b88a", e: "#111", b: "#5a5a7a", l: "#3a2a1a" }, lines: ["Na Vila Abandonada moravam minha filha e meu neto.", "As múmias são lentas, mas batem forte.", "Os esqueletos correm. Não deixe que te cerquem!"], quest: { id: "q_tome", text: "Purifique a Vila Abandonada", reward: 80, kind: "clear", goal: "vila" } },
+  { id: "lia", kind: "npc", name: "Lia, a menina", x: 240, y: 60, pal: { h: "#a0522d", s: "#f2c79a", e: "#111", b: "#d06090", l: "#3a2a1a" }, lines: ["Você vai salvar a gente, né?", "Dizem que a caverna tem mais gemas... e mais monstros."], quest: { id: "q_lia", text: "Purifique a Caverna Sombria", reward: 150, kind: "clear", goal: "caverna" } },
 ];
 
 export class Village {
@@ -58,18 +62,18 @@ export class Village {
     if (k["ArrowUp"]) dy -= 1;
     if (k["ArrowDown"]) dy += 1;
     if (dx || dy) { this.tx = this.px; this.ty = this.py; this.target = null; }
-    else { const ddx = this.tx - this.px, ddy = this.ty - this.py, d = Math.sqrt(ddx, ddy); if (d > 1.5) { dx = ddx / d; dy = ddy / d; } }
-    const l = Math.sqrt(dx, dy);
+    else { const ddx = this.tx - this.px, ddy = this.ty - this.py, d = hyp(ddx, ddy); if (d > 1.5) { dx = ddx / d; dy = ddy / d; } }
+    const l = hyp(dx, dy);
     if (l) { dx /= l; dy /= l; if (Math.abs(dx) > 0.1) this.face = dx > 0 ? 1 : -1; }
     this.px = Math.max(8, Math.min(W - 8, this.px + dx * 48 * dt));
     this.py = Math.max(30, Math.min(H - 8, this.py + dy * 48 * dt));
-    if (this.target && Math.sqrt(this.target.x - this.px, this.target.y + 10 - this.py) < 3) {
+    if (this.target && hyp(this.target.x - this.px, this.target.y + 10 - this.py) < 3) {
       const s = this.target; this.target = null; this.onArrive(s);
     }
   }
 
   nearest(): Spot | null {
-    for (const s of SPOTS) if (Math.sqrt(s.x - this.px, s.y - this.py) < 18) return s;
+    for (const s of SPOTS) if (hyp(s.x - this.px, s.y - this.py) < 18) return s;
     return null;
   }
 
@@ -108,7 +112,7 @@ export class Village {
       }
     }
     // destination marker
-    if (Math.sqrt(this.tx - this.px, this.ty - this.py) > 2) { g.fillStyle = "#fff"; g.fillRect(Math.round(this.tx) - 1, Math.round(this.ty), 3, 1); }
+    if (hyp(this.tx - this.px, this.ty - this.py) > 2) { g.fillStyle = "#fff"; g.fillRect(Math.round(this.tx) - 1, Math.round(this.ty), 3, 1); }
     // hero
     g.save(); g.translate(Math.round(this.px), Math.round(this.py)); g.scale(this.face, 1); g.drawImage(this.hero, -4, -4); g.restore();
     // hover highlight
