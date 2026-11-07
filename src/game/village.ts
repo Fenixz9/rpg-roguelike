@@ -58,23 +58,24 @@ export class Village {
     if (k["ArrowUp"]) dy -= 1;
     if (k["ArrowDown"]) dy += 1;
     if (dx || dy) { this.tx = this.px; this.ty = this.py; this.target = null; }
-    else { const ddx = this.tx - this.px, ddy = this.ty - this.py, d = Math.hypot(ddx, ddy); if (d > 1.5) { dx = ddx / d; dy = ddy / d; } }
-    const l = Math.hypot(dx, dy);
+    else { const ddx = this.tx - this.px, ddy = this.ty - this.py, d = Math.sqrt(ddx, ddy); if (d > 1.5) { dx = ddx / d; dy = ddy / d; } }
+    const l = Math.sqrt(dx, dy);
     if (l) { dx /= l; dy /= l; if (Math.abs(dx) > 0.1) this.face = dx > 0 ? 1 : -1; }
-    this.px = Math.max(8, Math.min(W - 8, this.px + dx * 70 * dt));
-    this.py = Math.max(30, Math.min(H - 8, this.py + dy * 70 * dt));
-    if (this.target && Math.hypot(this.target.x - this.px, this.target.y + 10 - this.py) < 3) {
+    this.px = Math.max(8, Math.min(W - 8, this.px + dx * 48 * dt));
+    this.py = Math.max(30, Math.min(H - 8, this.py + dy * 48 * dt));
+    if (this.target && Math.sqrt(this.target.x - this.px, this.target.y + 10 - this.py) < 3) {
       const s = this.target; this.target = null; this.onArrive(s);
     }
   }
 
   nearest(): Spot | null {
-    for (const s of SPOTS) if (Math.hypot(s.x - this.px, s.y - this.py) < 18) return s;
+    for (const s of SPOTS) if (Math.sqrt(s.x - this.px, s.y - this.py) < 18) return s;
     return null;
   }
 
-  draw() {
-    const g = this.ctx;
+  bg: HTMLCanvasElement | null = null;
+
+  drawStatic(g: CanvasRenderingContext2D) {
     for (let y = 0; y < H; y += 16) for (let x = 0; x < W; x += 16) { g.fillStyle = ((x + y) / 16) & 1 ? "#3f6b34" : "#467a3a"; g.fillRect(x, y, 16, 16); }
     // paths
     g.fillStyle = "#8a7350"; g.fillRect(0, 88, W, 14); g.fillRect(152, 30, 14, 140);
@@ -84,15 +85,18 @@ export class Village {
     for (let y = 22; y < H; y += 6) { g.fillRect(0, y, 4, 5); if (y < 84 || y > 108) g.fillRect(W - 4, y, 4, 5); }
     // smith house + anvil
     house(g, 40, 22, "#7a3b2a"); g.fillStyle = "#555"; g.fillRect(74, 62, 8, 4); g.fillRect(76, 66, 4, 3);
-    const fl = Math.floor(this.t * 8) % 2; g.fillStyle = fl ? "#ff8a3d" : "#ffd23f"; g.fillRect(36, 58, 4, 4);
     // barracks
     house(g, 140, 8, "#3a4a7a"); g.fillStyle = "#b03030"; g.fillRect(186, 10, 2, 16); g.fillRect(188, 10, 8, 5);
-    // houses
     house(g, 220, 22, "#6a4a2a"); house(g, 60, 112, "#6a4a2a"); house(g, 230, 118, "#7a3b2a");
-    // well
     g.fillStyle = "#777"; g.fillRect(110, 92, 12, 8); g.fillStyle = "#2a4a8a"; g.fillRect(112, 94, 8, 4);
-    // gate
     g.fillStyle = "#3a2410"; g.fillRect(W - 10, 82, 10, 28); g.fillStyle = "#000"; g.fillRect(W - 7, 86, 7, 20);
+  }
+
+  draw() {
+    const g = this.ctx;
+    if (!this.bg) { this.bg = document.createElement("canvas"); this.bg.width = W; this.bg.height = H; this.drawStatic(this.bg.getContext("2d")!); }
+    g.drawImage(this.bg, 0, 0);
+    const fl = Math.floor(this.t * 8) % 2; g.fillStyle = fl ? "#ff8a3d" : "#ffd23f"; g.fillRect(36, 58, 4, 4);
     g.fillStyle = "#ffd23f"; if (Math.floor(this.t * 3) % 2) g.fillRect(W - 22, 93, 3, 3);
     // npcs
     for (const s of SPOTS) {
@@ -104,7 +108,7 @@ export class Village {
       }
     }
     // destination marker
-    if (Math.hypot(this.tx - this.px, this.ty - this.py) > 2) { g.fillStyle = "#fff"; g.fillRect(Math.round(this.tx) - 1, Math.round(this.ty), 3, 1); }
+    if (Math.sqrt(this.tx - this.px, this.ty - this.py) > 2) { g.fillStyle = "#fff"; g.fillRect(Math.round(this.tx) - 1, Math.round(this.ty), 3, 1); }
     // hero
     g.save(); g.translate(Math.round(this.px), Math.round(this.py)); g.scale(this.face, 1); g.drawImage(this.hero, -4, -4); g.restore();
     // hover highlight
