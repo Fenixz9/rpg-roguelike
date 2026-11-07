@@ -150,3 +150,30 @@
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
+
+/* ===== Game UI: plain CSS (hex colors, no flex gap, no layers) so old Samsung Tizen browsers render it ===== */
+html, body { margin: 0; padding: 0; background: #14121f; overflow: hidden; }
+.g-root { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #14121f; color: #f4eedc; font-family: "Press Start 2P", monospace; line-height: 1.5; overflow: hidden; -webkit-user-select: none; user-select: none; }
+.g-canvas { position: absolute; image-rendering: pixelated; image-rendering: crisp-edges; }
+.g-hud { position: absolute; top: 0; left: 0; right: 0; padding: 1.6vh 2vh; display: -webkit-box; display: flex; -webkit-box-pack: justify; justify-content: space-between; font-size: 2.6vh; text-shadow: 0.3vh 0.3vh 0 #000; pointer-events: none; }
+.g-hint { position: absolute; bottom: 0; left: 0; right: 0; padding: 2vh; text-align: center; font-size: 2.4vh; text-shadow: 0.3vh 0.3vh 0 #000; pointer-events: none; }
+.g-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(12, 10, 22, 0.9); display: -webkit-box; display: flex; -webkit-box-orient: vertical; flex-direction: column; -webkit-box-align: center; align-items: center; -webkit-box-pack: center; justify-content: center; padding: 3vh; cursor: default; overflow-y: auto; }
+.g-title { color: #ffd23f; font-size: 4.2vh; margin: 0 0 3vh 0; text-align: center; text-shadow: 0.4vh 0.4vh 0 #000; }
+.g-text { font-size: 3vh; max-width: 80vw; text-align: center; margin: 0 0 3vh 0; }
+.g-sub { color: #a9a2c4; font-size: 2.2vh; margin: 0 0 2vh 0; text-align: center; }
+.g-row { display: -webkit-box; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; -webkit-box-pack: center; justify-content: center; max-width: 94vw; margin-bottom: 2vh; }
+.g-card { display: block; width: 28vw; margin: 1vh; padding: 2vh; border: 0.6vh solid #4a4566; background: #26223a; color: #f4eedc; font-family: inherit; font-size: 2.2vh; text-align: left; cursor: pointer; outline: none; }
+.g-card:hover, .g-card:focus { border-color: #ffd23f; background: #3a3456; }
+.g-card.sel { border-color: #ffd23f; background: #3a3456; }
+.g-card.off { opacity: 0.45; }
+.g-card .t { color: #ffd23f; font-size: 2.6vh; margin-bottom: 1vh; }
+.g-card .d { color: #c9c2e0; font-size: 1.9vh; }
+.g-card .k { color: #8a83a8; font-size: 1.6vh; }
+.g-btn { display: inline-block; margin: 1vh; padding: 2vh 4vh; border: 0.6vh solid #4a4566; background: #26223a; color: #f4eedc; font-family: inherit; font-size: 2.8vh; cursor: pointer; outline: none; }
+.g-btn:hover, .g-btn:focus { border-color: #ffd23f; color: #ffd23f; }
+.g-btn.pri { border-color: #ffd23f; color: #ffd23f; }
+.g-tabs { margin-bottom: 2vh; }
+.g-gold { color: #4fe3ff; }
+.g-red { color: #ff3b5c; }
+.g-dim { color: #5a5470; }
+.g-icon { width: 6vh; height: 6vh; image-rendering: pixelated; vertical-align: middle; margin-right: 1.5vh; }
