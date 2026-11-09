@@ -257,7 +257,7 @@ function NpcPanel({ panel, save, onSave, setPanel, close }: { panel: { kind: "np
 
 function ClassIcon({ c }: { c: HeroClass }) {
   const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => { const g = ref.current?.getContext("2d"); if (!g) return; g.clearRect(0, 0, 8, 8); g.drawImage(makeSprite(HERO, c.pal), 0, 0); }, [c]);
+  useEffect(() => { const g = ref.current?.getContext("2d"); if (!g) return; g.clearRect(0, 0, 8, 8); g.drawImage(makeSprite(c.rows || HERO, c.pal), 0, 0); }, [c]);
   return <canvas ref={ref} width={8} height={8} className="g-icon" />;
 }
 

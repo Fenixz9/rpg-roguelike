@@ -338,17 +338,17 @@ export class Game {
     this.place = place;
     this.onChange = onChange;
     const rows = cls.rows || HERO;
-    this.sprites.hero = makeSprite(rows, cls.pal);
-    this.sprites.hero2 = makeSprite(stepFrame(rows), cls.pal);
+    this.sprites["hero"] = makeSprite(rows, cls.pal);
+    this.sprites["hero2"] = makeSprite(stepFrame(rows), cls.pal);
     for (const k of Object.keys(ENEMIES) as EnemyKind[]) {
       const d = ENEMIES[k];
       this.sprites[k] = makeSprite(d.rows, d.pal);
       this.sprites[k + "2"] = makeSprite(stepFrame(d.rows), d.pal);
       this.sprites[k + "W"] = makeSprite(d.rows, whitePal(d.pal));
     }
-    this.sprites.heart = makeSprite(HEART, { r: "#ff3b5c" });
-    this.sprites.gem = makeSprite(GEM, { c: "#4fe3ff" });
-    this.sprites.big = makeSprite(BIGGEM, { c: "#ff6aff", w: "#fff" });
+    this.sprites["heart"] = makeSprite(HEART, { r: "#ff3b5c" });
+    this.sprites["gem"] = makeSprite(GEM, { c: "#4fe3ff" });
+    this.sprites["big"] = makeSprite(BIGGEM, { c: "#ff6aff", w: "#fff" });
     // Pre-render floor + decorations once (cheap per-frame draw on slow TVs)
     const size = (ARENA + 200) * 2;
     this.floor = document.createElement("canvas");
