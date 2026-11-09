@@ -1,5 +1,5 @@
 // Small synthesized sound bank: no downloads, and unsupported TVs stay silent safely.
-export type Sound = "shot" | "hit" | "hurt" | "loot" | "buy" | "card" | "boss" | "win" | "dead" | "chest";
+export type Sound = "zap" | "level" | "nova" | "shot" | "hit" | "hurt" | "loot" | "buy" | "card" | "boss" | "win" | "dead" | "chest";
 class GameAudio {
   context: AudioContext | null = null;
   volume = 0.35;
@@ -45,7 +45,7 @@ class GameAudio {
     const bank: Record<Sound, [number, number, number]> = {
       shot: [420, 0.06, 130], hit: [150, 0.04, 70], hurt: [180, 0.18, 40],
       loot: [880, 0.07, 1200], buy: [440, 0.2, 880], card: [520, 0.3, 1040],
-      boss: [90, 0.8, 40], win: [440, 0.8, 1760], dead: [330, 0.7, 40], chest: [660, 0.3, 1320],
+      boss: [90, 0.8, 40], win: [440, 0.8, 1760], dead: [330, 0.7, 40], chest: [660, 0.3, 1320], zap: [1200, 0.08, 300], level: [523, 0.4, 1568], nova: [300, 0.2, 900],
     };
     const [frequency, duration, end] = bank[sound];
     this.tone(frequency, duration, sound === "shot" ? 0.055 : 0.12, "square", end);

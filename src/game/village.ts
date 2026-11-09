@@ -40,12 +40,12 @@ export class Village {
   constructor(canvas: HTMLCanvasElement, cls: HeroClass, onArrive: (s: Spot) => void) {
     const ctx = canvas.getContext("2d"); if (!ctx) throw new Error("Canvas indisponível"); this.ctx = ctx;
     this.ctx.imageSmoothingEnabled = false;
-    this.hero = makeSprite(HERO, cls.pal);
+    this.hero = makeSprite(cls.rows || HERO, cls.pal);
     for (const s of SPOTS) if (s.kind !== "gate") this.npcs[s.id] = makeSprite(HERO, s.pal);
     this.onArrive = onArrive;
   }
 
-  setClass(cls: HeroClass) { this.hero = makeSprite(HERO, cls.pal); }
+  setClass(cls: HeroClass) { this.hero = makeSprite(cls.rows || HERO, cls.pal); }
 
   hover(): Spot | null {
     for (const s of SPOTS) if (Math.abs(s.x - this.mx) < 12 && Math.abs(s.y - this.my) < 12) return s;
@@ -73,8 +73,8 @@ export class Village {
     else { const ddx = this.tx - this.px, ddy = this.ty - this.py, d = hyp(ddx, ddy); if (d > 1.5) { dx = ddx / d; dy = ddy / d; } }
     const l = hyp(dx, dy);
     if (l) { dx /= l; dy /= l; if (Math.abs(dx) > 0.1) this.face = dx > 0 ? 1 : -1; }
-    this.px = Math.max(8, Math.min(VW - 8, this.px + dx * 42 * this.speed * dt));
-    this.py = Math.max(30, Math.min(VH - 8, this.py + dy * 42 * this.speed * dt));
+    this.px = Math.max(8, Math.min(VW - 8, this.px + dx * 95 * this.speed * dt));
+    this.py = Math.max(30, Math.min(VH - 8, this.py + dy * 95 * this.speed * dt));
     if (this.target && hyp(this.target.x - this.px, this.target.y + 10 - this.py) < 3) {
       const s = this.target; this.target = null; this.onArrive(s);
     }
